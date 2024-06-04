@@ -8,8 +8,8 @@
 <div align="center">
 
 [![Status](https://img.shields.io/badge/status-active-success.svg)]()
-[![GitHub Issues](https://img.shields.io/github/issues/ZXTFINAL/The-Documentation-Compendium.svg)](https://github.com/ZXTFINAL/LLM-CodeLab/issues)
-[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/ZXTFINAL/The-Documentation-Compendium.svg)](https://github.com/ZXTFINAL/LLM-CodeLab/pulls)
+[![GitHub Issues](https://img.shields.io/github/issues/ZXTFINAL/LLM-CodeLab.svg)](https://github.com/ZXTFINAL/LLM-CodeLab/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/ZXTFINAL/LLM-CodeLab.svg)](https://github.com/ZXTFINAL/LLM-CodeLab/pulls)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
 
 </div>
@@ -105,7 +105,7 @@ Add additional notes about how to deploy this on a live system.
 
 ## ✍️ Authors <a name = "authors"></a>
 
-- [@ZXTFINAL](https://github.com/ZXTFINAL) - Idea & Initial work
+- [@](https://github.com/ZXTFINAL) - Idea & Initial work
 
 See also the list of [contributors](https://github.com/ZXTFINAL/LLM-CodeLab/contributors) who participated in this project.
 
