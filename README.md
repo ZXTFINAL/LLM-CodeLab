@@ -105,7 +105,7 @@ Add additional notes about how to deploy this on a live system.
 
 ## ✍️ Authors <a name = "authors"></a>
 
-- [@](https://github.com/ZXTFINAL) - Idea & Initial work
+- [@](ZXTFINAL) - Idea & Initial work
 
 See also the list of [contributors](https://github.com/ZXTFINAL/LLM-CodeLab/contributors) who participated in this project.
 
