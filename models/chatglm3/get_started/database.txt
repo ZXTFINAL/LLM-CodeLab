@@ -1,0 +1,43 @@
+大模型百科全书原理篇 之 大模型技术原理的深入浅出（第一期）
+最近火出圈的OpenAI的ChatGPT大模型为我们的生活与工作带来了翻天覆地的变化，也更改了世界人工智能行业的发展趋势。目前大模型技术由于其深入的语言需求理解能力，出色的文本生成能力，风靡全球各个行业，在垂直领域带来了很多的技术革新。
+我们惊叹于大模型技术，享受着大模型的红利。那么，这么一个改变自然语言处理算法格局的技术底层使用的是什么技术呢？在多年后的今天我们又能从它发展而来的历代文章中学到那些新东西呢？我们将开展多个不同的系列来讲解大模型的原理、训练和应用。
+
+这里是大模型百科全书系列原理篇的第一期——再读Transformer
+
+2017年六月，一篇名为Attention is all you need的论文被Google实验室提出，该论文摒弃了目前主流NLP算法“非卷积即循环”的玩法，以注意力机制完整地搭建了一个Encoder-Decoder结构的网络。实际上早在2015年，斯坦福大学的计算机科学系就已经在《Effective Approaches to Attention-based Neural Machine Translation》中提出了在Seq2Seq的结构上使用注意力机制来增强模型性能的方式。
+
+但他们还是没有跳出“非卷积即循环”的圈子，仅是在循环上做加法。如果可以的话我也想将Encoder-Decoder结构的来源和注意力的来源进行深刻的讲解，可惜碍于篇幅，就不在此处赘述了。
+步入正题，Transformer的结构其实并不复杂，论文中的图片就可以很清晰地体现出详细的结构，可以说一目了然：
+
+可以说虽然Transformer颠覆了“非卷积即循环”的思想，但仍在Encoder-Decoder的架构下，但也合理，毕竟当年它提出来时主要还是想在The dominant sequence transduction models上做文章。
+模型结构分为Encoder输入部分、Encoder主干部分、Decoder输入部分、Decoder主干部分和最终输出部分，我们依次来看下每部分的详细结构和具体实现，本文采用Python与Pytorch进行复现：
+1.Word Embeddings
+从原论文中，我们可以发现本文的Embedding层并没有什么特别的，就是简单的线性变换矩阵。不过原文有记录细节，本文中的Encoder Embedding、Decoder Embedding、pre-Softmax共享一个线性变换层，这块大家可能会有疑问，对于pre-Softmax，Decoder的输出为(batch, seq_len, d_model)，而Embedding的输入实际上是(batch, seq_len, vocab_size)，输入的维度并不相等如何共用权重呢？其实也不难理解，原文在应用到pre-Softmax后需要进行softmax计算最终的文本输出，因此pre-Softmax的shape也就定下来了，没错，就是(d_model,vocab_size)，而Embedding的shape是(vocab_size,d_model)，所以两者互为转置矩阵，参数是可以共通的。不过这又面临一个问题，那就是Encoder和Decoder的Embedding词汇表大小也就是vocab_size必须一样才可以，否则还是要分别new一个。（或者Decoder Embedding、pre-Softmax共用权重）
+
+
+关于这块网上也有人在讨论具体实现细节，如果仅是复现其功能性的话，分别new一个线性全连接层就够了（甚至提供了一些自由度），原文采用这种方式我理解主要是为了节省参数量，网上大部分复现还是Encoder Embedding、Decoder Embedding、pre-Softmax分别new一个线性变换层，便于深度学习框架的简易实现。具体原论文细节也有讨论的，感兴趣可以去研究下这块。	
+neural networks - Understand the output layer of transformer - Cross Validated (stackexchange.com)
+[D] Attention is All You Need - Transformer Decoder & Shared Matrices Question : r/MachineLearning (reddit.com)
+我们还是通过分别new来实现这部分，而Embedding的实现也非常简单：
+self.src_word_embedding = nn.Embedding(src_vocab_size, d_model)
+这样一个线性的embedding层就新建好了。
+前向传播时：
+src_word_outs = self.src_word_embedding(X)
+
+2.Position Embeddings
+为什么要有位置编码这种东西呢？在“非卷积即循环”的结构中，卷积神经网络通过卷积核来获取上下文的数据信息，循环神经网络可以通过循环的特性获取上文信息（通过Bi-lstm可以获得双向信息）。这两种结构其实都有自己的问题，卷积神经网络受卷积核的大小影响，感受野会受限，而如果卷积核很大全面考虑又丢失了和上下文联系的意义（其实等价于全连接了），循环神经网络这种套娃逻辑受梯度传播的影响，会有梯度的遗忘，即使提出了LSTM和GRU等带门控结构的模型，也会有对异常数据过于敏感的缺陷。和它们俩一样，Transformer也想获取上下文信息，所以它提出了位置编码的概念，给编码好的数据打上一个位置的标签，作为特征的一部分。
+原文中提到了一个看上去很唬人的公式计算位置编码：
+
+其实也不复杂，pos为当前参数在seq_len的位置，i为当前参数在d_model的位置，将这二者的位置信息通过函数处理后加到前面的word embeddings里，赋予了每个位置独一无二的信息，而且赋予了相邻数据的相关性，从而达到了卷积神经网络和循环神经网络的考虑上下文的效果。
+而具体实现过程中，我们既可以按这种方式来，也可以new一个Embedding层，通过输入连续自然数矩阵，获取位置编码矩阵。这个Embedding层和前面做文本编码的不同，它的shape为(seq_len,d_model)，输入的数据为连续自然数矩阵，shape为(,seq_len)，前向传播的输出即(batch,seq_len,d_model)。这样就可以自动学习上下文的位置联系，这样很合理，毕竟本身它也是一个(seq_len,d_model)的矩阵，直接咬死一个固定的函数反而显得不合理了。（不过这样训练的成本肯定也会高，收敛速度不好说）我们可以通过这个函数的固定矩阵反推这个Embedding的值，作为矩阵的初始化权重。
+具体实现也很简单：
+self.src_position_embedding = nn.Embedding(seq_len, d_model)
+前向传播时：
+positions = torch.arange(0, seq_len).expand(N, seq_len)
+src_position_outs = self.src_position_embedding(positions)
+而后就可以将其和word embeddings的输出结果相加
+src_word_outs+src_position_outs
+具体实现可以考虑添加Dropout等结构，帮助整体收敛的优化。
+
+3.Encoder主干部分
+
